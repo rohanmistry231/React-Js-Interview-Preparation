@@ -1,0 +1,104 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React State Management Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        div { margin-bottom: 20px; }
+        button { margin: 5px; padding: 5px 10px; }
+        input, textarea { margin: 5px; padding: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Include React and ReactDOM via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <!-- Include Redux and React-Redux -->
+    <script src="https://cdn.jsdelivr.net/npm/redux@5.0.1/dist/redux.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-redux@8.1.3/dist/react-redux.min.js"></script>
+    <!-- Include Redux Toolkit and Redux Thunk -->
+    <script src="https://cdn.jsdelivr.net/npm/@reduxjs/toolkit@2.0.1/dist/redux-toolkit.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/redux-thunk@3.1.0/dist/redux-thunk.min.js"></script>
+    <!-- Include Babel for JSX compilation -->
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.5/babel.min.js"></script>
+
+    <!-- Import all components -->
+    <script type="text/babel">
+        // Import components and store
+        const LocalState = window.LocalState || (() => <div>LocalState Component Missing</div>);
+        const GlobalStateContext = window.GlobalStateContext || (() => <div>GlobalStateContext Component Missing</div>);
+        const ReduxDemo = window.ReduxDemo || (() => <div>ReduxDemo Component Missing</div>);
+        const StatePersistence = window.StatePersistence || (() => <div>StatePersistence Component Missing</div>);
+        const store = window.store || { Provider: ({ children }) => children }; // Fallback if store is missing
+
+        // App component to render all demos
+        const App = () => {
+            return (
+                <store.Provider store={store}>
+                    <div>
+                        <h1>React State Management Demo</h1>
+                        <LocalState />
+                        <GlobalStateContext />
+                        <ReduxDemo />
+                        <StatePersistence />
+                    </div>
+                </store.Provider>
+            );
+        };
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <!-- Define components and store -->
+    <script type="text/babel" src="LocalState.jsx"></script>
+    <script type="text/babel" src="GlobalStateContext.jsx"></script>
+    <script type="text/babel" src="ReduxSetup.jsx"></script>
+    <script type="text/babel" src="ReduxDemo.jsx"></script>
+    <script type="text/babel" src="StatePersistence.jsx"></script>
+</body>
+</html>
