@@ -1,0 +1,14 @@
+/* Styles for CSS Modules Demo */
+.container {
+    border: 2px solid #3498db;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.title {
+    color: #3498db;
+}
+
+.text {
+    color: #666;
+}
